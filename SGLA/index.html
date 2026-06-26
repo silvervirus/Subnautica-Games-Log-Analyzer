@@ -1,0 +1,49 @@
+ <!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Subnautica Log Analyzer</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Subnautica Log Analyzer</h1>
+
+<div class="upload-zone" onclick="document.getElementById('logInput').click()">
+
+<label class="upload-label" id="uploadLabel">Drop log file here</label>
+
+<input type="file" id="logInput" accept=".log,.txt" />
+
+</div>
+
+<div id="dashboard" style="display:none;">
+
+<div id="versionBox" class="box"><h2>Environment & Versions</h2><ul id="versionList"></ul></div>
+
+<div id="updateBox" class="box update-border" style="display:none;"><h2>Updates Needed</h2><ul id="updateList"></ul></div>
+
+<div id="errorBox" class="box error-border" style="display:none;"><h2>Error Box</h2><ul id="errorList"></ul></div>
+
+<div id="warnBox" class="box warn-border" style="display:none;"><h2>Warning Box</h2><ul id="warnList"></ul></div>
+
+<div id="modBox" class="box"><h2>Mod List</h2><ul id="modList"></ul></div>
+
+</div>
+
+</div>
+
+<script src="analyzer.js"></script>
+
+</body>
+
+</html> 

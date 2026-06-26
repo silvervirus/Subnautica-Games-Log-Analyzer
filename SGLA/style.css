@@ -1,0 +1,11 @@
+:root { --bg: #071720; --panel: #112635; --accent: #4fb3d9; --err: #ff5e5e; --warn: #ffcc00; --update: #4fdf89; --text: #d1e8f2; }
+body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+.container { max-width: 900px; margin: auto; }
+.box { background: var(--panel); padding: 15px; border-radius: 8px; border-left: 5px solid var(--accent); margin-bottom: 20px; }
+.upload-zone { background: var(--panel); border: 2px dashed var(--accent); padding: 30px; text-align: center; cursor: pointer; }
+.error-border { border-left-color: var(--err); }
+.warn-border { border-left-color: var(--warn); }
+.update-border { border-left-color: var(--update); }
+ul { list-style: none; padding: 0; }
+li { margin-bottom: 5px; font-size: 0.85em; font-family: monospace; word-break: break-all; }
+h1, h2 { color: var(--accent); }
