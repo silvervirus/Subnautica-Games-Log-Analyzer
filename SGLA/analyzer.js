@@ -33,11 +33,13 @@ function processLog(content) {
         sourceWarnings: [] 
     };
 
-    // Environment & UE4SS Detection
+    // Environment & UE4SS Detection - Cleaned
     if (content.includes("UE4SS")) {
         data.env = "Subnautica 2 (UE4SS)";
-        const ue4ssMatch = content.match(/UE4SS - (v[\d\.]+(?:[a-zA-Z0-9\s#]+)?(?: - Git SHA #[a-z0-9]+)?)/i);
-        if (ue4ssMatch) data.versions.ue4ss = ue4ssMatch[1];
+        const ue4ssMatch = content.match(/UE4SS - (v[\d\.]+(?:[a-zA-Z0-9\s#]+)?)/i);
+        if (ue4ssMatch) {
+            data.versions.ue4ss = ue4ssMatch[1].split(" - Git")[0];
+        }
     } else if (content.includes("QModManager") || content.includes("SMLHelper")) { 
         data.env = "Subnautica 1 (Legacy)"; 
         data.isLegacy = true; 
@@ -52,10 +54,10 @@ function processLog(content) {
         if (lower.includes("warning")) data.warnings.push(line);
 
         if (data.env.includes("Subnautica 2")) {
-            // SDF Detection (Ignoring Timestamps)
+            // SDF Mod Detection
             if (line.includes("SDF folder found in mod")) {
                 let m = line.split("mod ")[1]?.trim();
-                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF");
+                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF Mod");
             } 
             // C++ / Lua Detection
             else if (line.includes("Starting C++ mod") || line.includes("Starting Lua mod")) {
