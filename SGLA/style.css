@@ -1,6 +1,6 @@
 :root { --bg: #071720; --panel: #112635; --accent: #4fb3d9; --err: #ff5e5e; --warn: #ffcc00; --update: #4fdf89; --text: #d1e8f2; }
 body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-.container { max-width: 900px; margin: auto; }
+.container { max-width: 900px; margin: auto; padding: 0 20px;}
 .box { background: var(--panel); padding: 15px; border-radius: 8px; border-left: 5px solid var(--accent); margin-bottom: 20px; }
 .upload-zone { background: var(--panel); border: 2px dashed var(--accent); padding: 30px; text-align: center; cursor: pointer; }
 .error-border { border-left-color: var(--err); }
@@ -11,5 +11,41 @@ li { margin-bottom: 5px; font-size: 0.85em; font-family: monospace; word-break: 
 h1, h2 { color: var(--accent); }
 h2 {
   color: var(--accent);
-  font-size: 2.5rem;
+  font-size: 3.5rem;
+  font-weight: 700;
+  /* Add this to prevent default browser margins from shrinking the feel of the text */
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+/* Ensure the dashboard fits within the container */
+#dashboard {
+    padding: 20px;
+    background: #1a2a3a; /* Adjust to match your dark theme */
+    border-radius: 8px;
+    color: white;
+}
+
+/* Fix the giant text issue for H2s */
+#dashboard h2 {
+    font-size: 0.9rem; /* Reduce size to something manageable */
+    margin-bottom: 10px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+/* Ensure the Environment list text is readable */
+#envList {
+    font-size: 1rem;
+    padding: 10px;
+    background: #0d161f;
+    border-radius: 4px;
+}
+
+/* Style for Error/Warning pre tags */
+pre {
+    background: #000;
+    padding: 10px;
+    overflow-x: auto; /* Adds scrollbar if log lines are too long */
+    font-size: 0.9rem;
+    white-space: pre-wrap; /* Wraps long log lines instead of breaking layout */
 }

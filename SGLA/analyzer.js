@@ -1,9 +1,6 @@
-
-
 const EXCLUDED_PRELOADERS = ["BepInEx.Preloader", "BepInEx.SplashScreen.Patcher.BepInEx5", "Tobey.UnityAudio.Patcher", "Tobey.BepInEx.Timestamp", "Tobey.BZMacProcessFix", "Tobey.Subnautica.ConfigHandler.Patcher", "MirrorInternalLogs", "OpenBoarders", "CC2SkipHelpFilesPatcher", "GamePathLogger", "QModManager.QModPluginGenerator", "QModManager.UnityAudioFixer"];
 const EXCLUDED_MODS = ["Keybinds", "KismetDebuggerMod", "EventViewerMod", "LineTraceMod", "jsbLuaProfilerMod", "BPModLoaderMod", "ConsoleEnabler", "CheatManagerEnabler", "AdjustableLights", "Inspect Tools", "ConsoleCommandsMod", "ConsoleEnablerMod", "BPML_GenericFunctions", "CheatManagerEnablerMod", "QModManager.LogFilter"];
 const SOURCE_EXT = ['.cs', '.csproj', '.sln', '.h', '.inl', '.ubt', '.ubf', '.ush', '.cpp', '.hpp'];
-
 
 window.onload = () => {
     const params = new URLSearchParams(window.location.search);
@@ -16,7 +13,6 @@ window.onload = () => {
     }
 };
 
-
 document.getElementById('logInput').addEventListener('change', (e) => {
     if (!e.target.files.length) return;
     const reader = new FileReader();
@@ -26,12 +22,28 @@ document.getElementById('logInput').addEventListener('change', (e) => {
 
 function processLog(content) {
     const lines = content.split(/\r?\n/);
-    let data = { env: "Unknown", isLegacy: false, mods: new Map(), errors: [], warnings: [], updates: [], versions: { bep: null, naut: null }, sourceWarnings: [] };
+    let data = { 
+        env: "Unknown", 
+        isLegacy: false, 
+        mods: new Map(), 
+        errors: [], 
+        warnings: [], 
+        updates: [], 
+        versions: { bep: null, naut: null, ue4ss: null }, 
+        sourceWarnings: [] 
+    };
 
-    // Environment Detection
-    if (content.includes("UE4SS")) data.env = "Subnautica 2 (UE4SS)";
-    else if (content.includes("QModManager") || content.includes("SMLHelper")) { data.env = "Subnautica 1 (Legacy)"; data.isLegacy = true; }
-    else if (content.includes("BepInEx")) data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)";
+    // Environment & UE4SS Detection
+    if (content.includes("UE4SS")) {
+        data.env = "Subnautica 2 (UE4SS)";
+        const ue4ssMatch = content.match(/UE4SS - (v[\d\.]+(?:[a-zA-Z0-9\s#]+)?(?: - Git SHA #[a-z0-9]+)?)/i);
+        if (ue4ssMatch) data.versions.ue4ss = ue4ssMatch[1];
+    } else if (content.includes("QModManager") || content.includes("SMLHelper")) { 
+        data.env = "Subnautica 1 (Legacy)"; 
+        data.isLegacy = true; 
+    } else if (content.includes("BepInEx")) { 
+        data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)"; 
+    }
 
     // Parsing
     lines.forEach(line => {
@@ -40,11 +52,18 @@ function processLog(content) {
         if (lower.includes("warning")) data.warnings.push(line);
 
         if (data.env.includes("Subnautica 2")) {
-            if (line.includes("Starting C++ mod") || line.includes("Starting Lua mod")) {
+            // SDF Detection (Ignoring Timestamps)
+            if (line.includes("SDF folder found in mod")) {
+                let m = line.split("mod ")[1]?.trim();
+                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF");
+            } 
+            // C++ / Lua Detection
+            else if (line.includes("Starting C++ mod") || line.includes("Starting Lua mod")) {
                 let m = line.split("'")[1];
                 if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, line.includes("Lua") ? "Lua" : "C++");
             }
-            if (line.includes("has enabled.txt, starting mod")) {
+            // Enabled.txt Detection
+            else if (line.includes("has enabled.txt, starting mod")) {
                 let m = line.split("Mod '")[1]?.split("'")[0];
                 if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled.txt");
             }
@@ -75,11 +94,18 @@ function processLog(content) {
 
 function render(data) {
     document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('versionList').innerHTML = `<li>Environment: ${data.env}</li>` + (data.versions.bep ? `<li>BepInEx: v${data.versions.bep}</li>` : '') + (data.versions.naut ? `<li>Nautilus: v${data.versions.naut}</li>` : '');
+    
+    let versionHTML = `<li>Environment: ${data.env}</li>`;
+    if (data.versions.ue4ss) versionHTML += `<li>UE4SS: ${data.versions.ue4ss}</li>`;
+    if (data.versions.bep) versionHTML += `<li>BepInEx: v${data.versions.bep}</li>`;
+    if (data.versions.naut) versionHTML += `<li>Nautilus: v${data.versions.naut}</li>`;
+    
+    document.getElementById('versionList').innerHTML = versionHTML;
     document.getElementById('modList').innerHTML = Array.from(data.mods.entries()).map(([m, t]) => `<li>${m} <strong>[${t}]</strong></li>`).join('');
     document.getElementById('errorList').innerHTML = data.errors.slice(-10).map(e => `<li>${e}</li>`).join('');
     document.getElementById('warnList').innerHTML = [...data.warnings, ...data.sourceWarnings].map(w => `<li>${w}</li>`).join('');
     document.getElementById('updateList').innerHTML = data.updates.map(u => `<li>${u}</li>`).join('');
+    
     document.getElementById('errorBox').style.display = data.errors.length ? 'block' : 'none';
     document.getElementById('warnBox').style.display = (data.warnings.length || data.sourceWarnings.length) ? 'block' : 'none';
     document.getElementById('updateBox').style.display = data.updates.length ? 'block' : 'none';
