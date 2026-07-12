@@ -30,7 +30,6 @@ function processLog(content) {
         const lines = content.split(/\r?\n/);
         let data = { 
             env: "Unknown", 
-            isLegacy: false, 
             mods: new Map(), 
             errors: [], 
             warnings: [], 
@@ -48,7 +47,7 @@ function processLog(content) {
             parseUE4SS(lines, data);
         }  else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
             data.env = "Subnautica 1 (Legacy)";
-            data.isLegacy = true;
+           
             parseLegacy(lines, data);
         } 
 
