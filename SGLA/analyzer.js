@@ -41,10 +41,10 @@ function processLog(content) {
         };
         if (lowerContent.includes("ue4ss")) {
     data.isSub2 = true;
-} else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+} if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
      data.isLegacy = false;
     data.isSub = true;
-} else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+}  if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
     data.isSub = false;
     data.isLegacy = true;
 }
@@ -52,13 +52,13 @@ function processLog(content) {
        if (data.isSub2) {
             data.env = "Subnautica 2 (UE4SS)";
             parseUE4SS(lines, data);
-        }    else if (data.isSub) {
+        }   if (data.isSub) {
             data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
                 ? "Below Zero (Stable)" 
                 : "Subnautica 1 (Stable)";
               
             parseBepInEx(lines, data);
-        } else if (data.isLegacy) {
+        }  if (data.isLegacy) {
             data.env = "Subnautica 1 (Legacy)";
             parseLegacy(lines, data);
         }
