@@ -75,24 +75,34 @@ function parseUE4SS(lines, data) {
 
 function parseLegacy(lines, data) {
     lines.forEach(line => {
+        // Pattern 1: Standard load
         if (line.includes("Loaded mod:")) {
             let m = line.split("Loaded mod:")[1]?.trim();
             if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled (QMod)");
         }
+        // Pattern 2: SMLHelper/QMod Debug load
+        else if (line.includes("[QModManager:DEBUG]") && line.includes("ready to load")) {
+            // This captures the mod name if it follows the "ready to load" string
+            let m = line.split("ready to load")[0].split("]").pop().trim();
+            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Debug (QMod)");
+        }
     });
 }
-
 function parseBepInEx(lines, data) {
     lines.forEach(line => {
-        if (line.includes("Loading [")) {
-            let m = line.split("Loading [")[1]?.split("]")[0].split(" ")[0];
-            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Active (BepInEx)");
+        // Updated regex to capture everything inside the square brackets after "Loading ["
+        const match = line.match(/Loading\s+\[(.*?)\]/);
+        if (match && match[1]) {
+            let m = match[1].trim(); // This will correctly capture "Hydra 1.1.0"
+            if (m && !EXCLUDED_MODS.includes(m)) {
+                data.mods.set(m, "Active (BepInEx)");
+            }
         }
+        
         if (line.includes("BepInEx v")) data.versions.bep = line.split("v")[1].split(" ")[0].trim();
         if (line.includes("Nautilus")) data.versions.naut = line.match(/Nautilus\s*v?([0-9.]+)/i)?.[1];
     });
 }
-
 function render(data) {
     document.getElementById('dashboard').style.display = 'block';
     
