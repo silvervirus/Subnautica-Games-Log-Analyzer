@@ -30,6 +30,7 @@ function processLog(content) {
         const lines = content.split(/\r?\n/);
         let data = { 
             env: "Unknown", 
+            data.isLegacy = false;
             mods: new Map(), 
             errors: [], 
             warnings: [], 
@@ -41,13 +42,14 @@ function processLog(content) {
             data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
                 ? "Below Zero (Stable)" 
                 : "Subnautica 1 (Stable)";
+               data.isLegacy = false;
             parseBepInEx(lines, data);
         } else if (lowerContent.includes("ue4ss")) {
             data.env = "Subnautica 2 (UE4SS)";
             parseUE4SS(lines, data);
         }  else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
             data.env = "Subnautica 1 (Legacy)";
-           
+           data.isLegacy = true;
             parseLegacy(lines, data);
         } 
 
