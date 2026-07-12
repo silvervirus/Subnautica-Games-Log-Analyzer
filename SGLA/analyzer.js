@@ -1,7 +1,7 @@
 const EXCLUDED_PRELOADERS = ["BepInEx.Preloader", "BepInEx.SplashScreen.Patcher.BepInEx5", "Tobey.UnityAudio.Patcher", "Tobey.BepInEx.Timestamp", "Tobey.BZMacProcessFix", "Tobey.Subnautica.ConfigHandler.Patcher", "MirrorInternalLogs", "OpenBoarders", "CC2SkipHelpFilesPatcher", "GamePathLogger", "QModManager.QModPluginGenerator", "QModManager.UnityAudioFixer"];
 const EXCLUDED_MODS = ["Keybinds", "KismetDebuggerMod", "EventViewerMod", "LineTraceMod", "jsbLuaProfilerMod", "BPModLoaderMod", "ConsoleEnabler", "CheatManagerEnabler", "AdjustableLights", "Inspect Tools", "ConsoleCommandsMod", "ConsoleEnablerMod", "BPML_GenericFunctions", "CheatManagerEnablerMod", "QModManager.LogFilter"];
 const SOURCE_EXT = ['.cs', '.csproj', '.sln', '.h', '.inl', '.ubt', '.ubf', '.ush', '.cpp', '.hpp'];
-
+const lowerContent = content.toLowerCase();
 window.onload = () => {
     const params = new URLSearchParams(window.location.search);
     const logUrl = params.get('log');
@@ -32,7 +32,7 @@ function processLog(content) {
         versions: { bep: null, naut: null, ue4ss: null }, 
         sourceWarnings: [] 
     };
-const lowerContent = content.toLowerCase();
+
     // Detection Tree
 if (lowerContent.includes("ue4ss")) {
     data.env = "Subnautica 2 (UE4SS)";
