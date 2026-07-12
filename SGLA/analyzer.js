@@ -32,7 +32,7 @@ function processLog(content) {
         versions: { bep: null, naut: null, ue4ss: null }, 
         sourceWarnings: [] 
     };
-
+const lowerContent = content.toLowerCase();
     // Detection Tree
 if (lowerContent.includes("ue4ss")) {
     data.env = "Subnautica 2 (UE4SS)";
