@@ -39,33 +39,34 @@ function processLog(content) {
             versions: { bep: null, naut: null, ue4ss: null }, 
             sourceWarnings: [] 
         };
-        if (lowerContent.includes("ue4ss")) {
+       if (lowerContent.includes("ue4ss")) {
     data.isSub2 = true;
-}else  if (lowerContent.includes("nautilus")) {
-     data.isLegacy = false;
-    data.isSub = true;
-} else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
-    data.isSub = false;
+}
+else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
     data.isLegacy = true;
+}
+else if (lowerContent.includes("bepinex")) {
+    data.isSub = true;
 }
 
        if (data.isSub2) {
-            data.env = "Subnautica 2 (UE4SS)";
-            parseUE4SS(lines, data);
-        }  if (data.isSub) {
-            data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
-                ? "Below Zero (Stable)" 
-                : "Subnautica 1 (Stable)";
-              
-            parseBepInEx(lines, data);
-        }  if (data.isLegacy) {
-            data.env = "Subnautica 1 (Legacy)";
-            parseLegacy(lines, data);
-        }
-       else {
+    data.env = "Subnautica 2 (UE4SS)";
+    parseUE4SS(lines, data);
+}
+else if (data.isLegacy) {
+    data.env = "Subnautica 1 (Legacy)";
+    parseLegacy(lines, data);
+}
+else if (data.isSub) {
+    data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero"))
+        ? "Below Zero (Stable)"
+        : "Subnautica 1 (Stable)";
+    parseBepInEx(lines, data);
+}
+else {
     data.env = "Unknown / Not a recognized modded environment";
     console.warn("Could not determine environment from log flags.");
-}    
+}
 
         lines.forEach(line => {
             const lower = line.toLowerCase();
