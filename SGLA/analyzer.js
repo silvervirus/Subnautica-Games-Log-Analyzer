@@ -92,7 +92,7 @@ function parseBepInEx(lines, data) {
     lines.forEach(line => {
         // This looks for "Loading [" and captures everything until the closing "]"
         // It handles names like "Propulsion Cannon Plugin 1.0.0" and "Hydra 1.1.0"
-        const match = line.match(/Loading\s+\[(.*?)\]/i);
+        const match = line.match(/\[Info\s*:\s*.*?\]\s*(?:Loading\s+)?\[?(.*?)\]?$/i);
         
         if (match && match[1]) {
             let modName = match[1].trim();
