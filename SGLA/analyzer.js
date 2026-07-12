@@ -39,7 +39,7 @@ function processLog(content) {
             versions: { bep: null, naut: null, ue4ss: null }, 
             sourceWarnings: [] 
         };
-   if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+  if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
     // FORCE Legacy - Nothing else matters if these are found
     data.env = "Subnautica 1 (Legacy)";
     data.isLegacy = true;
