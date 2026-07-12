@@ -34,17 +34,22 @@ function processLog(content) {
     };
 
     // Detection Tree
-    if (content.includes("UE4SS")) {
-        data.env = "Subnautica 2 (UE4SS)";
-        parseUE4SS(lines, data);
-    } else if (content.includes("QModManager") || content.includes("SMLHelper")) {
-        data.env = "Subnautica 1 (Legacy)";
-        data.isLegacy = true;
-        parseLegacy(lines, data);
-    }else if (content.includes("Bepinex") || content.includes("Nautilus")) {
-        data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)";
-        parseBepInEx(lines, data);
+if (lowerContent.includes("ue4ss")) {
+    data.env = "Subnautica 2 (UE4SS)";
+    parseUE4SS(lines, data);
+} else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+    data.env = "Subnautica 1 (Legacy)";
+    data.isLegacy = true;
+    parseLegacy(lines, data);
+} else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+    // Check for specific markers for Below Zero
+    if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
+        data.env = "Below Zero (Stable)";
+    } else {
+        data.env = "Subnautica 1 (Stable)";
     }
+    parseBepInEx(lines, data);
+}
 
     // Common Error/Warning detection across all environments
     lines.forEach(line => {
