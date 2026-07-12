@@ -29,8 +29,10 @@ function processLog(content) {
         const lowerContent = content.toLowerCase();
         const lines = content.split(/\r?\n/);
         let data = { 
-            env: "Unknown", 
             isLegacy: false,
+            isSub2: false,
+            isSub: false,
+            env: "Unknown",
             mods: new Map(), 
             errors: [], 
             warnings: [], 
@@ -38,19 +40,27 @@ function processLog(content) {
             sourceWarnings: [] 
         };
 
-        if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+
+          if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+            data.env = "Subnautica 1 (Legacy)";
+              data.isSub= false;
+              data.isSub2 = false;
+           data.isLegacy = true;
+            parseLegacy(lines, data);
+        } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
             data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
                 ? "Below Zero (Stable)" 
                 : "Subnautica 1 (Stable)";
                data.isLegacy = false;
+            data.isSub2 = false;
+             data.isSub = true;
             parseBepInEx(lines, data);
         } else if (lowerContent.includes("ue4ss")) {
             data.env = "Subnautica 2 (UE4SS)";
+            data.isLegacy = false;
+            data.isSub = false;
+            data.isSub2 = true;
             parseUE4SS(lines, data);
-        }  else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
-            data.env = "Subnautica 1 (Legacy)";
-           data.isLegacy = true;
-            parseLegacy(lines, data);
         } 
 
         lines.forEach(line => {
