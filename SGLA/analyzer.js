@@ -56,7 +56,7 @@ function processLog(content) {
             parseBepInEx(lines, data);
         } else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
             data.env = "Subnautica 1 (Legacy)";
-              data.isSub= false;
+              data.isSub = false;
               data.isSub2 = false;
            data.isLegacy = true;
             parseLegacy(lines, data);
