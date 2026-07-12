@@ -33,65 +33,64 @@ function processLog(content) {
         sourceWarnings: [] 
     };
 
-    // Environment & UE4SS Detection - Cleaned
+    // Detection Tree
     if (content.includes("UE4SS")) {
         data.env = "Subnautica 2 (UE4SS)";
-        const ue4ssMatch = content.match(/UE4SS - (v[\d\.]+(?:[a-zA-Z0-9\s#]+)?)/i);
-        if (ue4ssMatch) {
-            data.versions.ue4ss = ue4ssMatch[1].split(" - Git")[0];
-        }
-    } else if (content.includes("QModManager") || content.includes("SMLHelper")) { 
-        data.env = "Subnautica 1 (Legacy)"; 
-        data.isLegacy = true; 
-    } else if (content.includes("BepInEx")) { 
-        data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)"; 
+        parseUE4SS(lines, data);
+    } else if (content.includes("QModManager") || content.includes("SMLHelper")) {
+        data.env = "Subnautica 1 (Legacy)";
+        data.isLegacy = true;
+        parseLegacy(lines, data);
+    } else if (content.includes("BepInEx")) {
+        data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)";
+        parseBepInEx(lines, data);
     }
 
-    // Parsing
+    // Common Error/Warning detection across all environments
     lines.forEach(line => {
         const lower = line.toLowerCase();
         if (lower.includes("error")) data.errors.push(line);
         if (lower.includes("warning")) data.warnings.push(line);
-
-        if (data.env.includes("Subnautica 2")) {
-            // SDF Mod Detection
-            if (line.includes("SDF folder found in mod")) {
-                let m = line.split("mod ")[1]?.trim();
-                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF Mod");
-            } 
-            // C++ / Lua Detection
-            else if (line.includes("Starting C++ mod") || line.includes("Starting Lua mod")) {
-                let m = line.split("'")[1];
-                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, line.includes("Lua") ? "Lua" : "C++");
-            }
-            // Enabled.txt Detection
-            else if (line.includes("has enabled.txt, starting mod")) {
-                let m = line.split("Mod '")[1]?.split("'")[0];
-                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled.txt");
-            }
-        } else {
-            if (line.includes("Loading [")) {
-                let m = line.split("Loading [")[1]?.split("]")[0].split(" ")[0];
-                if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Active");
-            }
-            if (line.includes("BepInEx v")) data.versions.bep = line.split("v")[1].split(" ")[0].trim();
-            if (line.includes("Nautilus")) data.versions.naut = line.match(/Nautilus\s*v?([0-9.]+)/i)?.[1];
-        }
-
-        const pathMatch = line.match(/[a-zA-Z0-9_\-\\]+\\[a-zA-Z0-9_\-\\]+\.[a-z0-9]+/i);
-        if (pathMatch && SOURCE_EXT.some(ext => pathMatch[0].toLowerCase().endsWith(ext))) {
-            if (lower.includes('\\mods\\') || lower.includes('\\plugins\\')) {
-                data.sourceWarnings.push(`Source code incorrectly placed: ${pathMatch[0]}`);
-            }
-        }
     });
 
-    if (!data.isLegacy && data.env !== "Subnautica 2 (UE4SS)") {
-        if (data.versions.bep && data.versions.bep < "5.4.23.5") data.updates.push(`BepInEx engine is outdated (${data.versions.bep}). Upgrade to 5.4.23.5.`);
-        if (data.versions.naut && data.versions.naut < "1.0.0.51") data.updates.push(`Nautilus framework is outdated (${data.versions.naut}). Upgrade to 1.0.0.51.`);
-    }
-
     render(data);
+}
+
+// --- Parsing Trees ---
+
+function parseUE4SS(lines, data) {
+    lines.forEach(line => {
+        if (line.includes("Starting C++ mod")) {
+            let m = line.split("'")[1];
+            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "C++ Mod");
+        } else if (line.includes("[Lua]")) {
+            let m = line.split("[Lua]")[1]?.split("]")[0].trim();
+            if (m && !EXCLUDED_MODS.includes(m) && !m.includes("Status")) data.mods.set(m, "Lua Mod");
+        } else if (line.includes("SDF folder found in mod")) {
+            let m = line.split("mod ")[1]?.trim();
+            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF Mod");
+        }
+    });
+}
+
+function parseLegacy(lines, data) {
+    lines.forEach(line => {
+        if (line.includes("Loaded mod:")) {
+            let m = line.split("Loaded mod:")[1]?.trim();
+            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled (QMod)");
+        }
+    });
+}
+
+function parseBepInEx(lines, data) {
+    lines.forEach(line => {
+        if (line.includes("Loading [")) {
+            let m = line.split("Loading [")[1]?.split("]")[0].split(" ")[0];
+            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Active (BepInEx)");
+        }
+        if (line.includes("BepInEx v")) data.versions.bep = line.split("v")[1].split(" ")[0].trim();
+        if (line.includes("Nautilus")) data.versions.naut = line.match(/Nautilus\s*v?([0-9.]+)/i)?.[1];
+    });
 }
 
 function render(data) {
@@ -106,9 +105,7 @@ function render(data) {
     document.getElementById('modList').innerHTML = Array.from(data.mods.entries()).map(([m, t]) => `<li>${m} <strong>[${t}]</strong></li>`).join('');
     document.getElementById('errorList').innerHTML = data.errors.slice(-10).map(e => `<li>${e}</li>`).join('');
     document.getElementById('warnList').innerHTML = [...data.warnings, ...data.sourceWarnings].map(w => `<li>${w}</li>`).join('');
-    document.getElementById('updateList').innerHTML = data.updates.map(u => `<li>${u}</li>`).join('');
     
     document.getElementById('errorBox').style.display = data.errors.length ? 'block' : 'none';
     document.getElementById('warnBox').style.display = (data.warnings.length || data.sourceWarnings.length) ? 'block' : 'none';
-    document.getElementById('updateBox').style.display = data.updates.length ? 'block' : 'none';
 }
