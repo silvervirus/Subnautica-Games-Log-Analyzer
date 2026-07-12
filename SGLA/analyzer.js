@@ -39,6 +39,13 @@ function processLog(content) {
             versions: { bep: null, naut: null, ue4ss: null }, 
             sourceWarnings: [] 
         };
+        if (lowerContent.includes("ue4ss")) {
+    data.isSub2 = true;
+} else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+    data.isSub = true;
+} else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+    data.isLegacy = true;
+}
 
        if (data.isSub2) {
             data.env = "Subnautica 2 (UE4SS)";
