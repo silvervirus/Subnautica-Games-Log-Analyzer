@@ -1,7 +1,7 @@
 const EXCLUDED_PRELOADERS = ["BepInEx.Preloader", "BepInEx.SplashScreen.Patcher.BepInEx5", "Tobey.UnityAudio.Patcher", "Tobey.BepInEx.Timestamp", "Tobey.BZMacProcessFix", "Tobey.Subnautica.ConfigHandler.Patcher", "MirrorInternalLogs", "OpenBoarders", "CC2SkipHelpFilesPatcher", "GamePathLogger", "QModManager.QModPluginGenerator", "QModManager.UnityAudioFixer"];
 const EXCLUDED_MODS = ["Keybinds", "KismetDebuggerMod", "EventViewerMod", "LineTraceMod", "jsbLuaProfilerMod", "BPModLoaderMod", "ConsoleEnabler", "CheatManagerEnabler", "AdjustableLights", "Inspect Tools", "ConsoleCommandsMod", "ConsoleEnablerMod", "BPML_GenericFunctions", "CheatManagerEnablerMod", "QModManager.LogFilter"];
 const SOURCE_EXT = ['.cs', '.csproj', '.sln', '.h', '.inl', '.ubt', '.ubf', '.ush', '.cpp', '.hpp'];
-const lowerContent = content.toLowerCase();
+
 window.onload = () => {
     const params = new URLSearchParams(window.location.search);
     const logUrl = params.get('log');
@@ -21,6 +21,9 @@ document.getElementById('logInput').addEventListener('change', (e) => {
 });
 
 function processLog(content) {
+    // MOVE THIS LINE HERE
+    const lowerContent = content.toLowerCase(); 
+    
     const lines = content.split(/\r?\n/);
     let data = { 
         env: "Unknown", 
@@ -34,22 +37,21 @@ function processLog(content) {
     };
 
     // Detection Tree
-if (lowerContent.includes("ue4ss")) {
-    data.env = "Subnautica 2 (UE4SS)";
-    parseUE4SS(lines, data);
-} else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
-    data.env = "Subnautica 1 (Legacy)";
-    data.isLegacy = true;
-    parseLegacy(lines, data);
-} else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
-    // Check for specific markers for Below Zero
-    if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
-        data.env = "Below Zero (Stable)";
-    } else {
-        data.env = "Subnautica 1 (Stable)";
+    if (lowerContent.includes("ue4ss")) {
+        data.env = "Subnautica 2 (UE4SS)";
+        parseUE4SS(lines, data);
+    } else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+        data.env = "Subnautica 1 (Legacy)";
+        data.isLegacy = true;
+        parseLegacy(lines, data);
+    } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+        if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
+            data.env = "Below Zero (Stable)";
+        } else {
+            data.env = "Subnautica 1 (Stable)";
+        }
+        parseBepInEx(lines, data);
     }
-    parseBepInEx(lines, data);
-}
 
     // Common Error/Warning detection across all environments
     lines.forEach(line => {
