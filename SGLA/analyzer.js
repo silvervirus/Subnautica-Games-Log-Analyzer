@@ -2,7 +2,18 @@ const EXCLUDED_PRELOADERS = ["BepInEx.Preloader", "BepInEx.SplashScreen.Patcher.
 const EXCLUDED_MODS = ["Keybinds", "KismetDebuggerMod", "EventViewerMod", "LineTraceMod", "jsbLuaProfilerMod", "BPModLoaderMod", "ConsoleEnabler", "CheatManagerEnabler", "AdjustableLights", "Inspect Tools", "ConsoleCommandsMod", "ConsoleEnablerMod", "BPML_GenericFunctions", "CheatManagerEnablerMod", "QModManager.LogFilter"];
 const SOURCE_EXT = ['.cs', '.csproj', '.sln', '.h', '.inl', '.ubt', '.ubf', '.ush', '.cpp', '.hpp'];
 
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
+    // Handle File Upload
+    const logInput = document.getElementById('logInput');
+    logInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = (event) => processLog(event.target.result);
+            reader.readAsText(e.target.files[0]);
+        }
+    });
+
+    // Handle URL Params
     const params = new URLSearchParams(window.location.search);
     const logUrl = params.get('log');
     if (logUrl) {
@@ -11,59 +22,48 @@ window.onload = () => {
             .then(data => processLog(data))
             .catch(err => console.error("Auto-fetch failed:", err));
     }
-};
-
-document.getElementById('logInput').addEventListener('change', (e) => {
-    if (!e.target.files.length) return;
-    const reader = new FileReader();
-    reader.onload = (e) => processLog(e.target.result);
-    reader.readAsText(e.target.files[0]);
 });
 
 function processLog(content) {
-    // MOVE THIS LINE HERE
-    const lowerContent = content.toLowerCase(); 
-    
-    const lines = content.split(/\r?\n/);
-    let data = { 
-        env: "Unknown", 
-        isLegacy: false, 
-        mods: new Map(), 
-        errors: [], 
-        warnings: [], 
-        updates: [], 
-        versions: { bep: null, naut: null, ue4ss: null }, 
-        sourceWarnings: [] 
-    };
+    try {
+        const lowerContent = content.toLowerCase();
+        const lines = content.split(/\r?\n/);
+        let data = { 
+            env: "Unknown", 
+            isLegacy: false, 
+            mods: new Map(), 
+            errors: [], 
+            warnings: [], 
+            versions: { bep: null, naut: null, ue4ss: null }, 
+            sourceWarnings: [] 
+        };
 
-    // Detection Tree
-    if (lowerContent.includes("ue4ss")) {
-        data.env = "Subnautica 2 (UE4SS)";
-        parseUE4SS(lines, data);
-    } else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
-        data.env = "Subnautica 1 (Legacy)";
-        data.isLegacy = true;
-        parseLegacy(lines, data);
-    } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
-        if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
-            data.env = "Below Zero (Stable)";
-        } else {
-            data.env = "Subnautica 1 (Stable)";
+        // Detection Tree
+        if (lowerContent.includes("ue4ss")) {
+            data.env = "Subnautica 2 (UE4SS)";
+            parseUE4SS(lines, data);
+        } else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+            data.env = "Subnautica 1 (Legacy)";
+            data.isLegacy = true;
+            parseLegacy(lines, data);
+        } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+            data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
+                ? "Below Zero (Stable)" 
+                : "Subnautica 1 (Stable)";
+            parseBepInEx(lines, data);
         }
-        parseBepInEx(lines, data);
+
+        lines.forEach(line => {
+            const lower = line.toLowerCase();
+            if (lower.includes("error")) data.errors.push(line);
+            if (lower.includes("warning")) data.warnings.push(line);
+        });
+
+        render(data);
+    } catch (err) {
+        console.error("Critical Processing Error:", err);
     }
-
-    // Common Error/Warning detection across all environments
-    lines.forEach(line => {
-        const lower = line.toLowerCase();
-        if (lower.includes("error")) data.errors.push(line);
-        if (lower.includes("warning")) data.warnings.push(line);
-    });
-
-    render(data);
 }
-
-// --- Parsing Trees ---
 
 function parseUE4SS(lines, data) {
     lines.forEach(line => {
@@ -73,68 +73,55 @@ function parseUE4SS(lines, data) {
         } else if (line.includes("[Lua]")) {
             let m = line.split("[Lua]")[1]?.split("]")[0].trim();
             if (m && !EXCLUDED_MODS.includes(m) && !m.includes("Status")) data.mods.set(m, "Lua Mod");
-        } else if (line.includes("SDF folder found in mod")) {
-            let m = line.split("mod ")[1]?.trim();
-            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "SDF Mod");
         }
     });
 }
 
 function parseLegacy(lines, data) {
     lines.forEach(line => {
-        // Pattern 1: Standard load
         if (line.includes("Loaded mod:")) {
             let m = line.split("Loaded mod:")[1]?.trim();
             if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled (QMod)");
         }
-        // Pattern 2: SMLHelper/QMod Debug load
-        else if (line.includes("[QModManager:DEBUG]") && line.includes("ready to load")) {
-            // This captures the mod name if it follows the "ready to load" string
-            let m = line.split("ready to load")[0].split("]").pop().trim();
-            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Debug (QMod)");
-        }
     });
 }
+
 function parseBepInEx(lines, data) {
     lines.forEach(line => {
-        // This regex looks for "Loading [" specifically after the info tag
-        // It captures the content between the FIRST set of brackets that follow "Loading"
         const match = line.match(/Loading\s+\[([^\]]+)\]/i);
-        
-        if (match && match[1]) {
-            let modName = match[1].trim();
-            
-            // Check your EXCLUDED_MODS/PRELOADERS here
-            if (modName && !EXCLUDED_MODS.includes(modName) && !EXCLUDED_PRELOADERS.includes(modName)) {
-                data.mods.set(modName, "Active (BepInEx)");
-            }
+        if (match && match[1] && !EXCLUDED_MODS.includes(match[1]) && !EXCLUDED_PRELOADERS.includes(match[1])) {
+            data.mods.set(match[1].trim(), "Active (BepInEx)");
         }
-        
-        // Version extractors
         if (line.includes("BepInEx v")) {
             const bepMatch = line.match(/BepInEx\s+v([0-9.]+)/i);
             if (bepMatch) data.versions.bep = bepMatch[1];
         }
-        
         if (line.includes("Nautilus")) {
             const nautMatch = line.match(/Nautilus\s+v?([0-9.]+)/i);
             if (nautMatch) data.versions.naut = nautMatch[1];
         }
     });
 }
+
 function render(data) {
     document.getElementById('dashboard').style.display = 'block';
     
+    // Versions
     let versionHTML = `<li>Environment: ${data.env}</li>`;
-    if (data.versions.ue4ss) versionHTML += `<li>UE4SS: ${data.versions.ue4ss}</li>`;
     if (data.versions.bep) versionHTML += `<li>BepInEx: v${data.versions.bep}</li>`;
     if (data.versions.naut) versionHTML += `<li>Nautilus: v${data.versions.naut}</li>`;
-    
     document.getElementById('versionList').innerHTML = versionHTML;
-    document.getElementById('modList').innerHTML = Array.from(data.mods.entries()).map(([m, t]) => `<li>${m} <strong>[${t}]</strong></li>`).join('');
-    document.getElementById('errorList').innerHTML = data.errors.slice(-10).map(e => `<li>${e}</li>`).join('');
-    document.getElementById('warnList').innerHTML = [...data.warnings, ...data.sourceWarnings].map(w => `<li>${w}</li>`).join('');
+
+    // Mods
+    document.getElementById('modList').innerHTML = Array.from(data.mods.entries())
+        .map(([m, t]) => `<li>${m} <strong>[${t}]</strong></li>`).join('');
     
+    // Errors/Warnings
+    const errorList = document.getElementById('errorList');
+    errorList.innerHTML = data.errors.slice(-10).map(e => `<li>${e}</li>`).join('');
     document.getElementById('errorBox').style.display = data.errors.length ? 'block' : 'none';
-    document.getElementById('warnBox').style.display = (data.warnings.length || data.sourceWarnings.length) ? 'block' : 'none';
+
+    const warnList = document.getElementById('warnList');
+    warnList.innerHTML = data.warnings.slice(-20).map(w => `<li>${w}</li>`).join('');
+    document.getElementById('warnBox').style.display = data.warnings.length ? 'block' : 'none';
 }
