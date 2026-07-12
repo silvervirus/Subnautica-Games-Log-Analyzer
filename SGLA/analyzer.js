@@ -54,7 +54,7 @@ function processLog(content) {
             data.isSub2 = false;
              data.isSub = true;
             parseBepInEx(lines, data);
-        } if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+        } else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
             data.env = "Subnautica 1 (Legacy)";
               data.isSub= false;
               data.isSub2 = false;
