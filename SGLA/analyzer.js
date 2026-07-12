@@ -41,7 +41,7 @@ function processLog(content) {
         data.env = "Subnautica 1 (Legacy)";
         data.isLegacy = true;
         parseLegacy(lines, data);
-    } else if (content.includes("BepInEx")) {
+    }else if (content.includes("Bepinex") || content.includes("Nautilus")) {
         data.env = content.includes("SubnauticaZero") ? "Below Zero (Stable)" : "Subnautica 1 (Stable)";
         parseBepInEx(lines, data);
     }
