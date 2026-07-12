@@ -41,7 +41,7 @@ function processLog(content) {
         };
         if (lowerContent.includes("ue4ss")) {
     data.isSub2 = true;
-} if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+} if (lowerContent.includes("nautilus")) {
      data.isLegacy = false;
     data.isSub = true;
 }  if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
