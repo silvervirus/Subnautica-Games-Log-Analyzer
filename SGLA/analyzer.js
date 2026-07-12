@@ -90,14 +90,14 @@ function parseLegacy(lines, data) {
 }
 function parseBepInEx(lines, data) {
     lines.forEach(line => {
-        // This looks for "Loading [" and captures everything until the closing "]"
-        // It handles names like "Propulsion Cannon Plugin 1.0.0" and "Hydra 1.1.0"
-        const match = line.match(/\[Info\s*:\s*.*?\]\s*(?:Loading\s+)?\[?(.*?)\]?$/i);
+        // This regex looks for "Loading [" specifically after the info tag
+        // It captures the content between the FIRST set of brackets that follow "Loading"
+        const match = line.match(/Loading\s+\[([^\]]+)\]/i);
         
         if (match && match[1]) {
             let modName = match[1].trim();
             
-            // Filter out internal BepInEx noise
+            // Check your EXCLUDED_MODS/PRELOADERS here
             if (modName && !EXCLUDED_MODS.includes(modName) && !EXCLUDED_PRELOADERS.includes(modName)) {
                 data.mods.set(modName, "Active (BepInEx)");
             }
@@ -105,11 +105,12 @@ function parseBepInEx(lines, data) {
         
         // Version extractors
         if (line.includes("BepInEx v")) {
-            data.versions.bep = line.split("BepInEx v")[1].split(" ")[0].trim();
+            const bepMatch = line.match(/BepInEx\s+v([0-9.]+)/i);
+            if (bepMatch) data.versions.bep = bepMatch[1];
         }
+        
         if (line.includes("Nautilus")) {
-            // Updated to be more flexible with version number formats
-            const nautMatch = line.match(/Nautilus\s*v?([0-9.]+)/i);
+            const nautMatch = line.match(/Nautilus\s+v?([0-9.]+)/i);
             if (nautMatch) data.versions.naut = nautMatch[1];
         }
     });
