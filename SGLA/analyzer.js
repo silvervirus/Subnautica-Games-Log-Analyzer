@@ -30,7 +30,7 @@ function processLog(content) {
         const lines = content.split(/\r?\n/);
         let data = { 
             env: "Unknown", 
-            isLegacy = false,
+            isLegacy: false,
             mods: new Map(), 
             errors: [], 
             warnings: [], 
