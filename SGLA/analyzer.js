@@ -30,7 +30,19 @@ function processLog(content, mode = "auto") {
     try {
         const lowerContent = content.toLowerCase();
         const lines = content.split(/\r?\n/);
-        let data = { /* ... your existing initialization ... */ };
+        
+        // Ensure this object is defined correctly
+        let data = { 
+            isLegacy: false,
+            isSub2: false,
+            isSub: false,
+            env: "Unknown",
+            mods: new Map(), 
+            errors: [], 
+            warnings: [], 
+            versions: { bep: null, naut: null, ue4ss: null }, 
+            sourceWarnings: [] 
+        };
 
         // ADDED: Logic Gate
         if (mode === "stable") {
