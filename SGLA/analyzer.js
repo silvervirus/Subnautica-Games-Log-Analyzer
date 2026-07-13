@@ -63,20 +63,8 @@ if (mode === "stable") {
     data.isLegacy = true;
     parseLegacy(lines, data);
 } else {
-    // 1. Check for Legacy FIRST - it is more specific
-    if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper"))) {
-        data.env = "Subnautica 1 (Legacy)";
-        data.isLegacy = true;
-        parseLegacy(lines, data);
-    } 
-    // 2. Check for UE4SS NEXT
-    else if (lowerContent.includes("ue4ss")) {
-        data.env = "Subnautica 2 (UE4SS)";
-        data.isSub2 = true;
-        parseUE4SS(lines, data);
-    } 
-    // 3. Finally, check for BepInEx/Nautilus
-    else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+    // 1. Check for Nautilus FIRST - it is the definitive marker for Stable
+    if (lowerContent.includes("nautilus")) {
         if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
             data.env = "Subnautica BelowZero (Stable)";
             data.isSubBZ = true;
@@ -84,6 +72,24 @@ if (mode === "stable") {
             data.env = "Subnautica 1 (Stable)";
             data.isSub = true;
         }
+        parseBepInEx(lines, data);
+    }
+    // 2. Check for Legacy markers NEXT
+    else if (lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) {
+        data.env = "Subnautica 1 (Legacy)";
+        data.isLegacy = true;
+        parseLegacy(lines, data);
+    }
+    // 3. Fallback for others (like UE4SS)
+    else if (lowerContent.includes("ue4ss")) {
+        data.env = "Subnautica 2 (UE4SS)";
+        data.isSub2 = true;
+        parseUE4SS(lines, data);
+    }
+    // 4. Default case if BepInEx is present but no specific framework is identified
+    else if (lowerContent.includes("bepinex")) {
+        data.env = "Subnautica 1 (Stable)";
+        data.isSub = true;
         parseBepInEx(lines, data);
     }
 }
