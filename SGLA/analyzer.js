@@ -63,16 +63,21 @@ if (mode === "stable") {
     data.isLegacy = true;
     parseLegacy(lines, data);
 } else {
-    // Original Auto-detection logic
-    if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
+   } else {
+    // 1. Check for Legacy FIRST - it is more specific
+    if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper"))) {
         data.env = "Subnautica 1 (Legacy)";
         data.isLegacy = true;
         parseLegacy(lines, data);
-    } else if (lowerContent.includes("ue4ss")) {
+    } 
+    // 2. Check for UE4SS NEXT
+    else if (lowerContent.includes("ue4ss")) {
         data.env = "Subnautica 2 (UE4SS)";
         data.isSub2 = true;
         parseUE4SS(lines, data);
-    } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+    } 
+    // 3. Finally, check for BepInEx/Nautilus
+    else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
         if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
             data.env = "Subnautica BelowZero (Stable)";
             data.isSubBZ = true;
