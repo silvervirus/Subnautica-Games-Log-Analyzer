@@ -63,7 +63,6 @@ if (mode === "stable") {
     data.isLegacy = true;
     parseLegacy(lines, data);
 } else {
-   } else {
     // 1. Check for Legacy FIRST - it is more specific
     if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper"))) {
         data.env = "Subnautica 1 (Legacy)";
