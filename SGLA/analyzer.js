@@ -36,6 +36,7 @@ function processLog(content, mode = "auto") {
             isLegacy: false,
             isSub2: false,
             isSub: false,
+            isSubBZ: false,
             env: "Unknown",
             mods: new Map(), 
             errors: [], 
@@ -44,37 +45,46 @@ function processLog(content, mode = "auto") {
             sourceWarnings: [] 
         };
 
-        // ADDED: Logic Gate
-        if (mode === "stable") {
-            data.env = "Subnautica Stable";
-            data.isSub = true;
-            parseBepInEx(lines, data);
-        } else if (mode === "ue4ss") {
-            data.env = "Subnautica 2 (UE4SS)";
-            data.isSub2 = true;
-            parseUE4SS(lines, data);
-        } else if (mode === "legacy") {
-            data.env = "Subnautica 1 (Legacy)";
-            data.isLegacy = true;
-            parseLegacy(lines, data);
+       // ADDED: Logic Gate
+if (mode === "stable") {
+    data.env = "Subnautica Stable";
+    data.isSub = true;
+    parseBepInEx(lines, data);
+} else if (mode === "stableBZ") { // Changed to else if
+    data.env = "Subnautica Below Zero Stable";
+    data.isSubBZ = true;
+    parseBepInEx(lines, data);
+} else if (mode === "ue4ss") {
+    data.env = "Subnautica 2 (UE4SS)";
+    data.isSub2 = true;
+    parseUE4SS(lines, data);
+} else if (mode === "legacy") {
+    data.env = "Subnautica 1 (Legacy)";
+    data.isLegacy = true;
+    parseLegacy(lines, data);
+} else {
+    // Original Auto-detection logic
+    if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
+        data.env = "Subnautica 1 (Legacy)";
+        data.isLegacy = true;
+        parseLegacy(lines, data);
+    } else if (lowerContent.includes("ue4ss")) {
+        data.env = "Subnautica 2 (UE4SS)";
+        data.isSub2 = true;
+        parseUE4SS(lines, data);
+    } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+        if (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) {
+            data.env = "Subnautica BelowZero (Stable)";
+            data.isSubBZ = true;
         } else {
-            // Original Auto-detection logic
-            if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
-                data.env = "Subnautica 1 (Legacy)";
-                data.isLegacy = true;
-                parseLegacy(lines, data);
-            } else if (lowerContent.includes("ue4ss")) {
-                data.env = "Subnautica 2 (UE4SS)";
-                data.isSub2 = true;
-                parseUE4SS(lines, data);
-            } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
-                data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
-                    ? "Below Zero (Stable)" 
-                    : "Subnautica 1 (Stable)";
-                data.isSub = true;
-                parseBepInEx(lines, data);
-            }
+            data.env = "Subnautica 1 (Stable)";
+            data.isSub = true;
         }
+        parseBepInEx(lines, data);
+    }
+}
+            
+        
         lines.forEach(line => {
             const lower = line.toLowerCase();
             if (lower.includes("error")) data.errors.push(line);
