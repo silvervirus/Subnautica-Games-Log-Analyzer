@@ -3,12 +3,14 @@ const EXCLUDED_MODS = ["Keybinds", "KismetDebuggerMod", "EventViewerMod", "LineT
 const SOURCE_EXT = ['.cs', '.csproj', '.sln', '.h', '.inl', '.ubt', '.ubf', '.ush', '.cpp', '.hpp'];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Handle File Upload
     const logInput = document.getElementById('logInput');
+    const logTypeSelect = document.getElementById('logType'); // Assuming ID "logType"
+
     logInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
             const reader = new FileReader();
-            reader.onload = (event) => processLog(event.target.result);
+            // Pass the user's selected log type as an argument
+            reader.onload = (event) => processLog(event.target.result, logTypeSelect.value);
             reader.readAsText(e.target.files[0]);
         }
     });
@@ -24,44 +26,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function processLog(content) {
+function processLog(content, mode = "auto") {
     try {
         const lowerContent = content.toLowerCase();
         const lines = content.split(/\r?\n/);
-        let data = { 
-            isLegacy: false,
-            isSub2: false,
-            isSub: false,
-            env: "Unknown",
-            mods: new Map(), 
-            errors: [], 
-            warnings: [], 
-            versions: { bep: null, naut: null, ue4ss: null }, 
-            sourceWarnings: [] 
-        };
-  if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
-    // FORCE Legacy - Nothing else matters if these are found
-    data.env = "Subnautica 1 (Legacy)";
-    data.isLegacy = true;
-    parseLegacy(lines, data);
-} 
-else if (lowerContent.includes("ue4ss")) {
-    // Subnautica 2
-    data.env = "Subnautica 2 (UE4SS)";
-    data.isSub2 = true;
-    parseUE4SS(lines, data);
-} 
-else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
-    // Modern Stable (BepInEx/Nautilus)
-    data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
-        ? "Below Zero (Stable)" 
-        : "Subnautica 1 (Stable)";
-    data.isSub = true;
-    parseBepInEx(lines, data);
-} 
-else {
-    data.env = "Unknown";
-}
+        let data = { /* ... your existing initialization ... */ };
+
+        // ADDED: Logic Gate
+        if (mode === "stable") {
+            data.env = "Subnautica Stable";
+            data.isSub = true;
+            parseBepInEx(lines, data);
+        } else if (mode === "ue4ss") {
+            data.env = "Subnautica 2 (UE4SS)";
+            data.isSub2 = true;
+            parseUE4SS(lines, data);
+        } else if (mode === "legacy") {
+            data.env = "Subnautica 1 (Legacy)";
+            data.isLegacy = true;
+            parseLegacy(lines, data);
+        } else {
+            // Original Auto-detection logic
+            if ((lowerContent.includes("qmodmanager") || lowerContent.includes("smlhelper")) && !lowerContent.includes("bepinex")) {
+                data.env = "Subnautica 1 (Legacy)";
+                data.isLegacy = true;
+                parseLegacy(lines, data);
+            } else if (lowerContent.includes("ue4ss")) {
+                data.env = "Subnautica 2 (UE4SS)";
+                data.isSub2 = true;
+                parseUE4SS(lines, data);
+            } else if (lowerContent.includes("bepinex") || lowerContent.includes("nautilus")) {
+                data.env = (lowerContent.includes("subnauticazero") || lowerContent.includes("belowzero")) 
+                    ? "Below Zero (Stable)" 
+                    : "Subnautica 1 (Stable)";
+                data.isSub = true;
+                parseBepInEx(lines, data);
+            }
+        }
         lines.forEach(line => {
             const lower = line.toLowerCase();
             if (lower.includes("error")) data.errors.push(line);
