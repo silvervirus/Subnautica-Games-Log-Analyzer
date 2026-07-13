@@ -100,10 +100,10 @@ function parseUE4SS(lines, data) {
 }
 
 function parseLegacy(lines, data) {
-    lines.forEach(line => {
-        if (line.includes("Loaded mod:")) {
-            let m = line.split("Loaded mod:")[1]?.trim();
-            if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "Enabled (QMod)");
+       lines.forEach(line => {
+        const match = line.match(/Loading\s+\[([^\]]+)\]/i);
+        if (match && match[1] && !EXCLUDED_MODS.includes(match[1]) && !EXCLUDED_PRELOADERS.includes(match[1])) {
+            data.mods.set(match[1].trim(), "Active (Qmods)");
         }
     });
 }
