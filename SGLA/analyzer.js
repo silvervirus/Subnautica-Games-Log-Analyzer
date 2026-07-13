@@ -89,12 +89,24 @@ function processLog(content, mode = "auto") {
 
 function parseUE4SS(lines, data) {
     lines.forEach(line => {
+        // Existing C++ mod detection
         if (line.includes("Starting C++ mod")) {
             let m = line.split("'")[1];
             if (m && !EXCLUDED_MODS.includes(m)) data.mods.set(m, "C++ Mod");
-        } else if (line.includes("[Lua]")) {
+        } 
+        // Existing Lua mod detection
+        else if (line.includes("[Lua]")) {
             let m = line.split("[Lua]")[1]?.split("]")[0].trim();
             if (m && !EXCLUDED_MODS.includes(m) && !m.includes("Status")) data.mods.set(m, "Lua Mod");
+        }
+        // ADDED: SDF Mod detection
+        else if (line.includes("[SDF]")) {
+            // Extracts the mod name, e.g., "MoreIngots" from "[SDF]: SDF folder found in mod Moreingots"
+            // This assumes the format: [timestamp] [SDF]: ... in mod [Name]
+            if (line.toLowerCase().includes("in mod")) {
+                let m = line.split("in mod")[1].trim().split(" ")[0]; // Gets the word after "in mod"
+                if (m) data.mods.set(`${m} [SDF]`, "SDF Mod");
+            }
         }
     });
 }
